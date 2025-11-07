@@ -1,0 +1,70 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>リンク統計ページ</title>
+<style>
+body { font-family: Arial; text-align: center; margin-top: 60px; }
+.box { border: 1px solid #ddd; padding: 20px; width: 320px; margin: 0 auto; border-radius: 12px; }
+.count { font-size: 28px; color: #333; margin: 10px 0; }
+</style>
+</head>
+<body>
+
+<div class="box">
+<h3>公開データ</h3>
+<div class="count">✅ 今日のクリック数: <span id="today">--</span></div>
+<div class="count">✅ 累計クリック数: <span id="total">--</span></div>
+<p>数秒後に商品ページへ移動します…</p>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-database.js"></script>
+
+<script>
+const firebaseConfig = {"apiKey": "YOUR_KEY", "authDomain": "YOUR_DOMAIN.firebaseapp.com", "databaseURL": "YOUR_DB_URL", "projectId": "YOUR_PROJECT_ID", "storageBucket": "YOUR_BUCKET", "messagingSenderId": "YOUR_SENDER", "appId": "YOUR_APPID"};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const KOL_ID = "kol1";
+const AMAZON_LINK = "https://www.amazon.co.jp/dp/B0DHRVLPWG";
+
+function getTodayKey() {
+    const d = new Date();
+    return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+async function updateCounters() {
+    const todayKey = getTodayKey();
+    const ref = db.ref("clicks/" + KOL_ID);
+
+    ref.once("value").then(snapshot => {
+        let data = snapshot.val() || {};
+        let total = data.total || 0;
+        let today = data[todayKey] || 0;
+
+        total += 1;
+        today += 1;
+
+        ref.update({
+            total: total,
+            [todayKey]: today
+        });
+
+        document.getElementById("total").innerText = total;
+        document.getElementById("today").innerText = today;
+    });
+}
+
+updateCounters();
+
+setTimeout(() => {
+    window.location.href = AMAZON_LINK;
+}, 5000);
+</script>
+
+</body>
+</html>
